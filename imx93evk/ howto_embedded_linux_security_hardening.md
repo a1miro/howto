@@ -81,15 +81,13 @@ Not a standard itself but required by:
 For embedded Linux on i.MX93 (your current context), **IEC 62443-4-2** and **PSA Certified** are the most directly applicable, with **ETSI EN 303 645** if the product is a consumer device.
 
 
-Here is a comprehensive checklist organized by security domain:
-
 ---
 
 ## 6. Secure Boot Chain
 
 **Goal:** Ensure only authenticated firmware/OS runs on the device.
 
-- Enable **AHAB (Advanced High Assurance Boot)** on i.MX93 — NXP's hardware-enforced secure boot
+- Enable **AHAB (Advanced High Assurance Boot)/EdgeLock** on i.MX93, **HAB/OP-TEE/CAAM** on iMX8 — NXP's hardware-enforced secure boot
 - Sign bootloader (U-Boot), kernel, and device tree with your private key
 - Fuse/lock the SRK (Super Root Key) hash into eFuses — one-way, irreversible
 - Enable **HAB/AHAB closed configuration** in production (prevents unsigned images)
@@ -117,13 +115,23 @@ MACHINE_FEATURES:append = " optee"
 
 - Mount rootfs **read-only** (`ro` in fstab / kernel cmdline)
 - Use **dm-verity** for rootfs (integrity) or **dm-crypt / LUKS** for confidentiality
-- Separate writable partitions (var, data) with `noexec`, `nosuid`, `nodev` mount flags
+- Separate writable partitions (var, data, etc) with `noexec`, `nosuid`, `nodev` mount flags
 - Encrypt sensitive data partitions (using ELE-derived keys)
 - Disable unused filesystems in kernel config (`CONFIG_CRAMFS=n`, etc.)
 
 Example fstab flags:
-```
+```conf
 /dev/mmcblk0p2  /data  ext4  noexec,nosuid,nodev  0 2
+```
+- Minimal Yocto configuration:
+```conf
+# image recipe or local.conf
+EXTRA_IMAGE_FEATURES += "read-only-rootfs"
+IMAGE_INSTALL:append = " volatile-binds overlayfs-etc"
+```
+```conf
+# distro.conf or machine.conf
+MACHINE_FEATURES:append = " overlayfs"
 ```
 
 ---
@@ -147,6 +155,35 @@ CONFIG_DEVMEM=n                 # disable /dev/mem
 CONFIG_DEVKMEM=n
 ```
 
+Module Loading Security:
+```conf
+CONFIG_MODULES=is not set
+```
+
+Security Policy Hardening:
+```conf
+CONFIG_SECURITY_SELINUX=y
+```
+
+Attack Surface Reduction
+```
+CONFIG_PANIC_ON_OOPS=is not set
+CONFIG_PANIC_TIMEOUT=-1
+CONFIG_DEVMEM=is not set
+CONFIG_DEVKMEM=is not set
+CONFIG_KEXEC=is not set
+CONFIG_TRACING=is not set
+CONFIG_FTRACE=is not set
+CONFIG_DEBUG_FS=is not set
+CONFIG_STAGING=is not set
+CONFIG_KALLSYMS=is not set
+```
+File system encryption and/or verification
+```conf
+CONFIG_DM_VERITY=Y // read-only rootfs integrity
+CONFIG_DM_CRYPT=Y  // encrypted partitions
+CONFIG_DM_INTEGRITY=Y // integrity filesystems checking
+```
 Kernel command line:
 ```
 init_on_alloc=1 init_on_free=1 page_alloc.shuffle=1 slub_debug=F
@@ -284,6 +321,27 @@ Yocto recipes: `vigiles`, `spdx-tools`
 
 ---
 
+## 19. Penetration Testing Using Kali Linux
+
+Penetration testing validates the effectiveness of applied hardening measures by
+simulating real-world attacks against the device. Use a dedicated Kali Linux machine
+connected to the same isolated test network as the target i.MX93 device — never
+test on a production network.
+
+Key testing areas:
+- **Reconnaissance** — scan exposed ports and services with `nmap -sV -sC -p-`; any
+  port that should be closed (telnet, FTP, rpcbind) must not appear in results.
+- **TLS / SSH audit** — verify only strong ciphers and protocols are accepted using
+  `testssl.sh` and `ssh-audit`; confirm password authentication and root login are
+  rejected over SSH.
+- **Credential brute-force** — attempt default and common passwords with `hydra`;
+  account lockout (PAM `pam_faillock`) must trigger after a few failed attempts.
+- **Binary hardening check** — run `checksec` against devices binaries.
+- **Secure boot verification** — attempt to boot an unsigned image;
+- Document every finding with severity (CVSS v3.1 score), reproduction steps, and a recommended fix. Re-test after each remediation to confirm the issue is resolved.
+
+---
+
 ## 20. Recommended Yocto Layers
 
 | Layer | Purpose |
@@ -295,6 +353,4 @@ Yocto recipes: `vigiles`, `spdx-tools`
 | `meta-updater` (Mender) | OTA updates |
 | `meta-swupdate` | SWUpdate support |
 | `meta-timesys` | Vigiles CVE scanning and SBOM generation |
-
----
-
+| `meta-secure-boot` | Secure boot support |
