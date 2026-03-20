@@ -1,3 +1,30 @@
+# Embedded Linux Security Hardening for i.MX93
+
+## Table of Contents
+1. [International Standards](#1-international-standards)
+2. [IoT-Specific Standards & Guidelines](#2-iot-specific-standards--guidelines)
+3. [Linux / Software Specific](#3-linux--software-specific)
+4. [Embedded Linux Specific Practices](#4-embedded-linux-specific-practices-aligned-with-above-standards)
+5. [Emerging / Regional Regulations](#5-emerging--regional-regulations)
+6. [Secure Boot Chain](#6-secure-boot-chain)
+7. [Cryptographic Key Management](#7-cryptographic-key-management)
+8. [Filesystem & Storage Security](#8-filesystem--storage-security)
+9. [Kernel Hardening](#9-kernel-hardening)
+10. [User & Privilege Management](#10-user--privilege-management)
+11. [Network Security](#11-network-security)
+12. [Secure OTA Updates](#12-secure-ota-updates)
+13. [Mandatory Access Control (MAC)](#13-mandatory-access-control-mac)
+14. [Remove Debug & Development Artifacts](#14-remove-debug--development-artifacts)
+15. [Secure Communication & Certificates](#15-secure-communication--certificates)
+16. [Logging & Monitoring](#16-logging--monitoring)
+17. [Supply Chain & SBOM](#17-supply-chain--sbom)
+18. [Physical Security](#18-physical-security)
+19. [Penetration Testing Using Kali Linux](#19-penetration-testing-using-kali-linux)
+20. [Recommended Yocto Layers](#20-recommended-yocto-layers)
+
+## Introduction
+This document provides a brief guide to security hardening for embedded Linux systems, specifically targeting the i.MX93 platform but can also be used for IMX8 platforms. It covers relevant international standards, best practices for secure boot, kernel hardening configurations, filesystem security, network security, and more. The goal is to help developers build robust, secure embedded Linux systems that can withstand real-world threats.
+
 ## 1. International Standards
 
 ### IEC 62443
