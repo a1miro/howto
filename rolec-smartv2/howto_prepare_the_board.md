@@ -1,5 +1,30 @@
 # Steps for setting up SmartV2 board
 
+## Flashing the image
+
+Download the latest image from [here](http://home.paralleldynamic.com:8022/imx93-rolec-smartv2/images/imx93-rolec-smartv2/rolec-everest-image-dev-imx93-rolec-smartv2.rootfs.wic.zst).
+
+### Flashing to SD card
+
+**1.** Using **balenaEtcher** GUI util
+
+Download the **balenaEtcher** executable from [here](https://etcher.balena.io) and install on your system.
+
+**IMPORTANT!** Before writing image to SD card, you will need to decompress zst archive. if you use Windows, MacOS or Ubuntu, it can be done in File Explorer.  It also can be done from the command line:
+```sh
+zstd -d rolec-everest-image-qt6-dev-imx93evk.rootfs.wic.zst 
+```
+Connect SD card reader to your computer, launch balenaEtcher, select the decompressed .wic image, select the SD card as a target and click Flash button.
+
+**2.** Using **dd** command line util
+
+**WARNING!** The **dd** command is a powerful tool that can cause data loss if used incorrectly. Make sure to double-check the target device before running this command.
+```sh
+zstdcat rolec-everest-image-qt6-dev-imx93evk.rootfs.wic.zst | dd of=/dev/sdX bs=4M status=progress conv=fsync
+```
+Replace **/dev/sdX** with the actual device name of your SD card (e.g., /dev/sdb). The **zstdcat** command is used to decompress the .zst file and pipe the output directly to the **dd** command, which writes it to the SD card. The **bs=4M** option sets the block size to 4 megabytes, which can speed up the writing process. The **status=progress** option will show you the progress of the operation, and **conv=fsync** ensures that all data is written to the SD card before finishing.
+
+
 ## Setting up ethernet MAC addresses
 
 At the moment the MAC addresses are randomly regenerated in the u-boot after each reboot. For avoiding the IP address reassignment after each reboot, you can set the MAC addresses in the u-boot environment variables. To do that, follow these steps:
